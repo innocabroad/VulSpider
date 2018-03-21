@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+import scrapy
+from newspider.items import NewspiderItem
+from scrapy.http import Request
+import time,random
+
+class NsfocusSpider(scrapy.Spider):
+    name = 'nsfocus'
+    allowed_domains = ['www.nsfocus.net']
+    start_urls = ['http://www.nsfocus.net/',]
+    def start_Requests(self):
+        ua = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36','Connection':'keep-alive'}
+        yield Request('http://www.nsfocus.net/vulndb/38999',headers=ua)
+    def parse(self, response):
+        item = NewspiderItem()
+        item['nsname'] = response.xpath('//div[@align="center"]/b/text()').extract()
+        item['url'] = response.url
+        item['newdate'] = response.xpath('//div[@class="vulbar"]/text()').extract()
+        item['update'] = response.xpath('//div[@class="vulbar"]/text()').extract()
+        item['cvenumber'] = response.xpath('//div[@class="vulbar"]/a/text()').extract()
+        item['impact'] = response.xpath('//blockquote/text()').extract()
+        item['datails'] = response.xpath('//div[@class="vulbar"]/text()').extract()
+        yield item
+        for i in range(39000,39108):
+            url = "http://www.nsfocus.net/vulndb/"+str(i)
+            sj = random.randint(1,5)
+            time.sleep(sj)   #设置时间间隔，避免造成服务器过多压力
+            yield Request(url,callback=self.parse)   #回调函数
